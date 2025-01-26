@@ -59,7 +59,6 @@ func NewBleControl() (*BleControl, error) {
 func (bc *BleControl) Loop() {
 	var retryCommand *commands.Command
 	for {
-		time.Sleep(1 * time.Second)
 		if retryCommand != nil {
 			retryCommand = bc.connectToVehicleAndOperateConnection(retryCommand)
 		} else {
