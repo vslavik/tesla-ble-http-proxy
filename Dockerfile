@@ -23,6 +23,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=${GOARM} make buil
 RUN mkdir -p /go/bin/key
 
 FROM scratch
+COPY --from=tesla/vehicle-command:latest /usr/local/bin/tesla* /
 # Timezone data
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 ENV TZ=Europe/Berlin
