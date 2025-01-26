@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/log"
+	"github.com/teslamotors/vehicle-command/pkg/cache"
 	"github.com/teslamotors/vehicle-command/pkg/connector/ble"
 	"github.com/teslamotors/vehicle-command/pkg/protocol"
 	"github.com/teslamotors/vehicle-command/pkg/protocol/protobuf/universalmessage"
@@ -34,7 +35,8 @@ func CloseBleControl() {
 }
 
 type BleControl struct {
-	privateKey protocol.ECDHPrivateKey
+	privateKey   protocol.ECDHPrivateKey
+	sessionCache *cache.SessionCache
 
 	commandStack  chan commands.Command
 	providerStack chan commands.Command
@@ -51,6 +53,7 @@ func NewBleControl() (*BleControl, error) {
 
 	return &BleControl{
 		privateKey:    privateKey,
+		sessionCache:  cache.New(0),
 		commandStack:  make(chan commands.Command, 50),
 		providerStack: make(chan commands.Command),
 	}, nil
@@ -110,6 +113,7 @@ func (bc *BleControl) connectToVehicleAndOperateConnection(firstCommand *command
 			defer log.Debug("close connection (A)")
 			defer car.Disconnect()
 			defer log.Debug("disconnect vehicle (A)")
+			defer car.UpdateCachedSessions(bc.sessionCache)
 			cmd := bc.operateConnection(car, firstCommand)
 			return cmd
 		} else if !retry {
@@ -171,7 +175,7 @@ func (bc *BleControl) TryConnectToVehicle(ctx context.Context, firstCommand *com
 	//defer conn.Close()
 
 	log.Debug("create vehicle object ...")
-	car, err = vehicle.NewVehicle(conn, bc.privateKey, nil)
+	car, err = vehicle.NewVehicle(conn, bc.privateKey, bc.sessionCache)
 	if err != nil {
 		return nil, nil, true, fmt.Errorf("failed to connect to vehicle (B): %s", err)
 	}
