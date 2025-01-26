@@ -227,7 +227,7 @@ func (bc *BleControl) operateConnection(car *vehicle.Vehicle, firstCommand *comm
 		}
 	}
 
-	timeout := time.After(29 * time.Second)
+	timeout := time.After(299 * time.Second)
 	for {
 		select {
 		case <-timeout:
